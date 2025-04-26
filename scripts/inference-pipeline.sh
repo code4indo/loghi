@@ -12,8 +12,9 @@ BASELINELAYPA=1
 REGIONLAYPA=0
 
 # Set the path to the yaml file and the pth file for the Laypa baseline model. Not required if BASELINELAYPA is 0
-LAYPABASELINEMODEL=INSERT_FULL_PATH_TO_YAML_HERE
-LAYPABASELINEMODELWEIGHTS=INSERT_FULLPATH_TO_PTH_HERE
+# --- PATH DIUBAH UNTUK WSL ---
+LAYPABASELINEMODEL=/mnt/c/PERSONAL/SMART-X/TESIS/SourceCode/loghi/models/laypa_general/baseline/config.yaml
+LAYPABASELINEMODELWEIGHTS=/mnt/c/PERSONAL/SMART-X/TESIS/SourceCode/loghi/models/laypa_general/baseline/model_best_mIoU.pth
 
 # Set the path to the yaml file and the pth file for the Laypa region model. Not required if REGIONLAYPA is 0
 LAYPAREGIONMODEL=INSERT_FULL_PATH_TO_YAML_HERE
@@ -22,12 +23,13 @@ LAYPAREGIONMODELWEIGHTS=INSERT_FULLPATH_TO_PTH_HERE
 # Set to 1 if you want to enable the HTR step, 0 otherwise
 HTRLOGHI=1
 # Set the path to the htr model. Not required if HTRLOGHI is 0
-HTRLOGHIMODEL=INSERT_FULL_PATH_TO_LOGHI_HTR_MODEL_HERE
+# --- PATH DIUBAH UNTUK WSL ---
+HTRLOGHIMODEL=/mnt/c/PERSONAL/SMART-X/TESIS/SourceCode/loghi/models/generic-2023-02-15
 
 # Set this to 1 for recalculating reading order, line clustering and cleaning.
 # WARNING this will remove regions found by Laypa
 RECALCULATEREADINGORDER=1
-# If the edge of baseline is closer than x pixels...
+# If the edge of baseline is closer thansudo snap remove dockersudo snap remove docker x pixels...
 RECALCULATEREADINGORDERBORDERMARGIN=50
 # Clean borders if 1
 RECALCULATEREADINGORDERCLEANBORDERS=0
@@ -41,6 +43,7 @@ SPLITWORDS=1
 # BEAMWIDTH: higher makes results slightly better at the expense of lot of computation time. In general don't set higher than 10
 BEAMWIDTH=1
 # Used gpu ids, set to "-1" to use CPU, "0" for first, "1" for second, etc
+# Pastikan NVIDIA Container Toolkit terinstal dan terkonfigurasi untuk WSL agar GPU dapat digunakan.
 GPU=0
 
 # Use 2013 PageXML namespace, set to 1 to enable, 0 otherwise
@@ -48,6 +51,25 @@ USE2013NAMESPACE=1
 
 # DO NOT MODIFY BELOW THIS LINE
 # ------------------------------
+
+# Function to check if a docker image exists locally
+function check_image_exists {
+    # $1 - Image name with tag
+    echo "Checking if Docker image '$1' exists locally..."
+    if ! docker image inspect "$1" > /dev/null 2>&1; then
+        echo "Error: Docker image '$1' not found locally."
+        echo "Please ensure the image is pulled or built correctly."
+        echo "Attempting to pull '$1'..."
+        if ! docker pull "$1"; then
+           echo "Failed to pull image '$1'. Please check the image name/tag and your Docker setup."
+           exit 1
+        fi
+        echo "Successfully pulled image '$1'."
+    else
+        echo "Image '$1' found."
+    fi
+}
+
 
 function check_error_and_exit {
     # $1 - The error message to display
@@ -75,10 +97,19 @@ DOCKERLOGHITOOLING=loghi/docker.loghi-tooling:$VERSION
 DOCKERLAYPA=loghi/docker.laypa:$VERSION
 DOCKERLOGHIHTR=loghi/docker.htr:$VERSION
 
+# Verify that the required Docker images exist locally
+check_image_exists $DOCKERLOGHITOOLING
+check_image_exists $DOCKERLAYPA
+check_image_exists $DOCKERLOGHIHTR
+
+
 DOCKERGPUPARAMS=""
 if [[ $GPU -gt -1 ]]; then
-    DOCKERGPUPARAMS="--gpus device=${GPU}"
-    echo "Using GPU ${GPU}"
+    # Use --gpus all for potentially better compatibility
+    DOCKERGPUPARAMS="--gpus all"
+    echo "Attempting to use all available GPUs"
+else
+    echo "Using CPU"
 fi
 
 IMAGES_PATH=`realpath $1`
@@ -167,8 +198,8 @@ fi
 if [[ $HTRLOGHI -eq 1 ]]; then
     echo "Cutting out snippets"
 
-    docker run -u $(id -u "${USER}"):$(id -g "${USER}") --rm \
-       -v "$IMAGES_PATH"/:"$IMAGES_PATH"/ \
+    docker run --rm \
+       -v "$IMAGES_PATH":"$IMAGES_PATH" \
        -v "$tmpdir":"$tmpdir" \
        $DOCKERLOGHITOOLING /src/loghi-tooling/minions/target/appassembler/bin/MinionCutFromImageBasedOnPageXMLNew \
            -input_path "$IMAGES_PATH" \
@@ -183,6 +214,17 @@ if [[ $HTRLOGHI -eq 1 ]]; then
 
     # Collect all the snippets in a file
     find "$tmpdir"/imagesnippets/ -type f -name '*.png' > "$tmpdir"/lines.txt
+
+    # --- BEGIN ADDED CHECK ---
+    # Check if lines.txt was created and is not empty
+    if [ ! -s "$tmpdir"/lines.txt ]; then
+        echo "Error: $tmpdir/lines.txt was not created or is empty. Snippet cutting might have failed."
+        echo "Contents of $tmpdir/imagesnippets/ :"
+        ls -l "$tmpdir"/imagesnippets/
+        exit 1
+    fi
+    echo "Successfully created $tmpdir/lines.txt with $(wc -l < "$tmpdir"/lines.txt) lines."
+    # --- END ADDED CHECK ---
 
     echo "Running HTR"
     LOGHIDIR="$(dirname "${HTRLOGHIMODEL}")"
