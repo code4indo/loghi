@@ -37,6 +37,37 @@
         </div>
     </div>
 
+    <!-- Add debugging information panel -->
+    <div id="debug-panel" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; display: none;">
+        <h3>Debugging Information</h3>
+        <pre id="debug-output">Loading debug information...</pre>
+        <button onclick="document.getElementById('debug-panel').style.display='none'">Close</button>
+    </div>
+
+    <!-- Load scripts normally, in the correct order -->
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM fully loaded and parsed');
+            // Show debug panel for visibility
+            document.getElementById('debug-panel').style.display = 'block';
+            document.getElementById('debug-output').textContent = 'DOM loaded successfully. Checking elements...';
+            
+            // Check if critical elements exist
+            const elementStatus = {
+                'document-list': !!document.getElementById('document-list'),
+                'image-container': !!document.getElementById('image-container'),
+                'text-content': !!document.getElementById('text-content'),
+                'zoom-in-button': !!document.getElementById('zoom-in-button'),
+                'zoom-out-button': !!document.getElementById('zoom-out-button'),
+                'zoom-reset-button': !!document.getElementById('zoom-reset-button')
+            };
+            
+            document.getElementById('debug-output').textContent += '\n\nElement status:\n' + 
+                Object.entries(elementStatus).map(([id, exists]) => 
+                    `${id}: ${exists ? '✓ Found' : '✗ Missing'}`
+                ).join('\n');
+        });
+    </script>
     <script src="script.js"></script>
 </body>
 </html>

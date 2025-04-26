@@ -1,11 +1,38 @@
+// Add error handling at the global level
+window.addEventListener('error', function(event) {
+    console.error('Global error caught:', event.error);
+    const debugPanel = document.getElementById('debug-panel');
+    const debugOutput = document.getElementById('debug-output');
+    if (debugPanel && debugOutput) {
+        debugPanel.style.display = 'block';
+        debugOutput.textContent += '\n\nERROR: ' + event.message + 
+            '\nLine: ' + event.lineno +
+            '\nFile: ' + event.filename;
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM siap. Mulai memuat data...");
+    
+    // Log initialization to debug panel
+    const debugOutput = document.getElementById('debug-output');
+    if (debugOutput) {
+        debugOutput.textContent += '\n\nScript.js started execution';
+    }
 
+    // Check for required elements
     const documentList = document.getElementById('document-list');
     const imageContainer = document.getElementById('image-container');
     const textContent = document.getElementById('text-content');
+    
+    if (debugOutput) {
+        debugOutput.textContent += '\n\nElement references obtained:' +
+            '\ndocumentList: ' + (documentList ? 'Found' : 'Missing') +
+            '\nimageContainer: ' + (imageContainer ? 'Found' : 'Missing') +
+            '\ntextContent: ' + (textContent ? 'Found' : 'Missing');
+    }
 
-    // --- Contoh Data (Ganti dengan logika pemuatan data sebenarnya) ---
+    // --- Contoh Data (keep your existing data) ---
     // Anda perlu logika untuk membaca direktori `arsip/page` atau sumber data lain
     // dan mendapatkan daftar file gambar (.png) dan XML (.xml).
     const documents = [
@@ -16,19 +43,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Fungsi untuk Memuat Daftar Dokumen ---
     function loadDocumentList() {
+        if (!documentList) {
+            console.error("Error: documentList element not found!");
+            if (debugOutput) {
+                debugOutput.textContent += '\n\nERROR: documentList element not found!';
+            }
+            return;
+        }
+        
         documentList.innerHTML = ''; // Kosongkan daftar sebelum memuat
         if (documents.length === 0) {
             documentList.innerHTML = '<li>Tidak ada dokumen ditemukan.</li>';
             return;
         }
 
-        documents.forEach(doc => {
-            const listItem = document.createElement('li');
-            listItem.textContent = doc.name;
-            listItem.dataset.docId = doc.id; // Simpan ID untuk referensi
-            listItem.addEventListener('click', () => loadDocument(doc.id));
-            documentList.appendChild(listItem);
-        });
+        try {
+            documents.forEach(doc => {
+                const listItem = document.createElement('li');
+                listItem.textContent = doc.name;
+                listItem.dataset.docId = doc.id; // Simpan ID untuk referensi
+                listItem.addEventListener('click', () => loadDocument(doc.id));
+                documentList.appendChild(listItem);
+            });
+            
+            if (debugOutput) {
+                debugOutput.textContent += '\n\nDocument list loaded successfully with ' + documents.length + ' items';
+            }
+        } catch (error) {
+            console.error("Error loading document list:", error);
+            if (debugOutput) {
+                debugOutput.textContent += '\n\nERROR loading document list: ' + error.message;
+            }
+        }
     }
 
     // --- Fungsi untuk Memuat Gambar dan Teks Dokumen yang Dipilih ---
@@ -328,7 +374,18 @@ document.addEventListener('DOMContentLoaded', () => {
         layer.style.left = `${imageElement.offsetLeft}px`;
     }
 
-    // --- Inisialisasi ---
-    loadDocumentList();
-
+    // --- Inisialisasi with error handling ---
+    try {
+        loadDocumentList();
+        console.log("Document list initialized");
+        if (debugOutput) {
+            debugOutput.textContent += '\n\nInitialization complete';
+        }
+    } catch (error) {
+        console.error("Error during initialization:", error);
+        if (debugOutput) {
+            debugOutput.textContent += '\n\nERROR during initialization: ' + error.message;
+            debugOutput.textContent += '\n\nStack: ' + error.stack;
+        }
+    }
 });
