@@ -143,6 +143,7 @@ Thumbs.db
 # User Specific Exclusions
 models/
 arsip/
+chat_history/
 
 # Docker related files (if needed, adjust based on actual build outputs)
 # Example: If docker builds create large files outside 'build/'

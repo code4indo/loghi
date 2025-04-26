@@ -180,8 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 removeHighlight(); // Hapus highlight sebelumnya
                 const coordsStr = event.target.dataset.coords;
                 const lineNumber = event.target.dataset.lineNumber; // Get line number
-                // Pass line number to drawHighlightBox
-                drawHighlightBox(coordsStr, imageElement, highlightLayer, originalWidth, originalHeight, lineNumber);
+                // Pass line number to drawHighlightShape (previously drawHighlightBox)
+                drawHighlightShape(coordsStr, imageElement, highlightLayer, originalWidth, originalHeight, lineNumber);
                 event.target.classList.add('highlight-text'); // Highlight teks juga
             }
         }
@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function removeHighlight() {
         const layer = document.getElementById('highlight-layer');
         if (layer) {
-            layer.innerHTML = ''; // Hapus semua kotak highlight
+            layer.innerHTML = ''; // Hapus semua SVG/kotak highlight
         }
          // Hapus highlight dari semua teks
         textContent.querySelectorAll('.highlight-text').forEach(el => {
@@ -234,24 +234,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    function drawHighlightBox(coordsStr, imageElement, layer, originalWidth, originalHeight, lineNumber) { // Add lineNumber parameter
+    // Renamed from drawHighlightBox to drawHighlightShape and modified to use SVG polygon
+    function drawHighlightShape(coordsStr, imageElement, layer, originalWidth, originalHeight, lineNumber) {
         if (!coordsStr || !originalWidth || !originalHeight || !imageElement.complete || imageElement.naturalWidth === 0) {
-             console.warn("Data tidak lengkap atau gambar belum siap untuk menggambar highlight box.");
+             console.warn("Data tidak lengkap atau gambar belum siap untuk menggambar highlight shape.");
              return;
         }
 
+        const pointsList = coordsStr.split(' ').map(p => {
+            const xy = p.split(',');
+            // Pastikan ada dua nilai (x dan y) dan keduanya adalah angka
+            if (xy.length === 2 && !isNaN(parseFloat(xy[0])) && !isNaN(parseFloat(xy[1]))) {
+                return { x: parseFloat(xy[0]), y: parseFloat(xy[1]) };
+            }
+            return null; // Kembalikan null jika format tidak valid
+        }).filter(p => p !== null); // Hapus entri null
 
-        const points = coordsStr.split(' ').map(p => p.split(',').map(Number));
-        if (points.length < 2) return; // Perlu setidaknya 2 titik
-
-        // Hitung bounding box dari points
-        let minX = points[0][0], maxX = points[0][0];
-        let minY = points[0][1], maxY = points[0][1];
-        for (let i = 1; i < points.length; i++) {
-            minX = Math.min(minX, points[i][0]);
-            maxX = Math.max(maxX, points[i][0]);
-            minY = Math.min(minY, points[i][1]);
-            maxY = Math.max(maxY, points[i][1]);
+        if (pointsList.length < 3) {
+             console.warn("Koordinat tidak cukup untuk membentuk poligon (perlu minimal 3 titik). Coords:", coordsStr);
+             return; // Perlu setidaknya 3 titik untuk poligon
         }
 
         // Dapatkan ukuran gambar yang ditampilkan saat ini
@@ -263,43 +264,61 @@ document.addEventListener('DOMContentLoaded', () => {
         const scaleX = displayWidth / originalWidth;
         const scaleY = displayHeight / originalHeight;
 
-        // Hitung posisi dan ukuran kotak highlight yang diskalakan
-        const boxLeft = minX * scaleX;
-        const boxTop = minY * scaleY;
-        const boxWidth = (maxX - minX) * scaleX;
-        const boxHeight = (maxY - minY) * scaleY;
+        // Skalakan titik-titik poligon
+        const scaledPointsStr = pointsList.map(p => `${p.x * scaleX},${p.y * scaleY}`).join(' ');
 
-        // Buat elemen highlight
-        const highlightBox = document.createElement('div');
-        highlightBox.className = 'highlight-box'; // Gunakan style dari CSS
-        highlightBox.style.left = `${boxLeft}px`;
-        highlightBox.style.top = `${boxTop}px`;
-        highlightBox.style.width = `${boxWidth}px`;
-        highlightBox.style.height = `${boxHeight}px`;
+        // Buat elemen SVG container
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.setAttribute('width', displayWidth.toString()); // Set lebar SVG sama dengan gambar
+        svg.setAttribute('height', displayHeight.toString()); // Set tinggi SVG sama dengan gambar
+        svg.style.position = 'absolute';
+        svg.style.left = '0';
+        svg.style.top = '0';
+        svg.style.overflow = 'visible'; // Pastikan poligon tidak terpotong oleh batas SVG
 
-        // --- Add Line Number Display ---
-        if (lineNumber) {
+        // Buat elemen poligon
+        const polygon = document.createElementNS(svgNS, "polygon");
+        polygon.setAttribute("points", scaledPointsStr);
+        polygon.setAttribute("class", "highlight-polygon"); // Gunakan class untuk styling
+        // Style fallback jika CSS tidak dimuat
+        polygon.setAttribute("fill", "rgba(255, 255, 0, 0.4)"); // Kuning semi-transparan
+        polygon.setAttribute("stroke", "rgba(230, 230, 0, 0.8)"); // Stroke sedikit lebih gelap
+        polygon.setAttribute("stroke-width", "1");
+
+        // Tambahkan poligon ke SVG
+        svg.appendChild(polygon);
+
+
+        // --- Add Line Number Display (position relative to the first point) ---
+        if (lineNumber && pointsList.length > 0) {
             const numberDiv = document.createElement('div');
             numberDiv.className = 'highlight-line-number'; // Add class for styling
             numberDiv.textContent = lineNumber;
             // Basic styling (can be moved to CSS)
             numberDiv.style.position = 'absolute';
-            numberDiv.style.top = '-8px'; // Position slightly above the box
-            numberDiv.style.left = '-5px'; // Position slightly left of the box
+            // Position near the first point of the polygon
+            const numLeft = pointsList[0].x * scaleX - 5; // Sedikit ke kiri dari titik pertama
+            const numTop = pointsList[0].y * scaleY - 8; // Sedikit di atas titik pertama
+            numberDiv.style.left = `${numLeft}px`;
+            numberDiv.style.top = `${numTop}px`;
             numberDiv.style.backgroundColor = 'rgba(255, 255, 0, 0.8)'; // Yellow background
             numberDiv.style.color = 'black';
             numberDiv.style.padding = '1px 3px';
             numberDiv.style.fontSize = '10px';
             numberDiv.style.fontWeight = 'bold';
             numberDiv.style.borderRadius = '3px';
-            numberDiv.style.zIndex = '1'; // Ensure it's above the box if needed
-            highlightBox.appendChild(numberDiv); // Add number inside the box element
+            numberDiv.style.zIndex = '10'; // Ensure it's above the SVG polygon
+            numberDiv.style.pointerEvents = 'none'; // Jangan menangkap event mouse
+
+            // Tambahkan nomor ke layer, bukan ke dalam SVG agar styling div berfungsi
+             layer.appendChild(numberDiv);
         }
         // --- End Line Number Display ---
 
 
-        // Tambahkan ke layer overlay
-        layer.appendChild(highlightBox);
+        // Tambahkan SVG ke layer overlay
+        layer.appendChild(svg);
 
          // Sesuaikan ukuran layer dengan gambar yang ditampilkan
         layer.style.width = `${displayWidth}px`;
@@ -307,7 +326,6 @@ document.addEventListener('DOMContentLoaded', () => {
          // Sesuaikan posisi layer relatif ke imageContainer (posisi gambar di dalam container)
         layer.style.top = `${imageElement.offsetTop}px`;
         layer.style.left = `${imageElement.offsetLeft}px`;
-
     }
 
     // --- Inisialisasi ---
