@@ -22,3 +22,4 @@ Untuk memulai HTR, lakukan langkah-langkah berikut:
 6.  Buka browser Anda dan arahkan ke server lokal, lalu pilih folder yang berisi gambar dokumen.
 git reset --hard HEAD
 git clean -fd
+migrasi ke vue js 
