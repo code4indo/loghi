@@ -12,10 +12,22 @@
     <div class="container">
         <div class="sidebar">
             <h2>Daftar Dokumen</h2>
+            <!-- Tambahkan tombol dan input folder -->
+            <div class="folder-selector">
+                <button id="browse-button">Pilih Folder Arsip</button>
+                <input type="file" id="folder-input" webkitdirectory directory style="display: none;">
+                <p id="selected-folder">Folder belum dipilih</p>
+            </div>
             <ul id="document-list">
                 <!-- Daftar gambar akan dimuat di sini oleh JavaScript -->
-                <li>Memuat...</li>
+                <li>Pilih folder arsip terlebih dahulu...</li>
             </ul>
+            <!-- Debug Panel (jika ada) -->
+            <div id="debug-panel" style="display:none; border: 1px solid red; margin-top: 10px; padding: 5px;">
+                <h3>Debugging Information</h3>
+                <pre id="debug-output">Loading debug information...</pre>
+                <button onclick="document.getElementById('debug-panel').style.display='none'">Close</button>
+            </div>
         </div>
 
         <div class="main-content">
@@ -35,13 +47,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Add debugging information panel -->
-    <div id="debug-panel" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; display: none;">
-        <h3>Debugging Information</h3>
-        <pre id="debug-output">Loading debug information...</pre>
-        <button onclick="document.getElementById('debug-panel').style.display='none'">Close</button>
     </div>
 
     <!-- Load scripts normally, in the correct order -->
