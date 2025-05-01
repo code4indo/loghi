@@ -10,7 +10,7 @@
     <h1>Viewer Transkripsi Dokumen</h1>
 
     <div class="container">
-        <div class="sidebar">
+        <div class="sidebar" id="sidebar-panel"> <!-- Add ID -->
             <h2>Daftar Dokumen</h2>
             <!-- Tambahkan tombol dan input folder -->
             <div class="folder-selector">
@@ -22,34 +22,31 @@
                 <!-- Daftar gambar akan dimuat di sini oleh JavaScript -->
                 <li>Pilih folder arsip terlebih dahulu...</li>
             </ul>
-            <!-- Debug Panel (jika ada) -->
-            <div id="debug-panel" style="display:none; border: 1px solid red; margin-top: 10px; padding: 5px;">
-                <h3>Debugging Information</h3>
-                <pre id="debug-output">Loading debug information...</pre>
-                <button onclick="document.getElementById('debug-panel').style.display='none'">Close</button>
+        </div>
+
+        <div class="image-viewer" id="image-panel"> <!-- Add ID -->
+            <h2>Gambar Dokumen</h2>
+            <div id="image-container">
+                <!-- Gambar yang dipilih akan ditampilkan di sini -->
+                <p>Pilih dokumen dari daftar.</p>
             </div>
         </div>
 
-        <div class="main-content">
-            <div class="image-viewer">
-                <h2>Gambar Dokumen</h2>
-                <div id="image-container">
-                    <!-- Gambar yang dipilih akan ditampilkan di sini -->
-                    <p>Pilih dokumen dari daftar.</p>
-                </div>
-            </div>
-
-            <div class="text-viewer">
-                <h2>Teks Transkripsi</h2>
-                <div id="text-content">
-                    <!-- Teks transkripsi akan ditampilkan di sini -->
-                    <p>Pilih dokumen dari daftar.</p>
-                </div>
+        <div class="text-viewer" id="text-panel"> <!-- Add ID -->
+            <h2>Teks Transkripsi</h2>
+            <div id="text-content">
+                <!-- Teks transkripsi akan ditampilkan di sini -->
+                <p>Pilih dokumen dari daftar.</p>
             </div>
         </div>
+
+        <!-- Panel Debug dihapus dari sini -->
+        <!-- <div id="debug-panel" ...> ... </div> -->
+
     </div>
 
     <!-- Load scripts normally, in the correct order -->
+    <script src="https://unpkg.com/split.js/dist/split.min.js"></script> <!-- Tambahkan Split.js -->
     <script>
         window.addEventListener('DOMContentLoaded', function() {
             console.log('DOM fully loaded and parsed');
@@ -62,9 +59,10 @@
                 'document-list': !!document.getElementById('document-list'),
                 'image-container': !!document.getElementById('image-container'),
                 'text-content': !!document.getElementById('text-content'),
-                'zoom-in-button': !!document.getElementById('zoom-in-button'),
-                'zoom-out-button': !!document.getElementById('zoom-out-button'),
-                'zoom-reset-button': !!document.getElementById('zoom-reset-button')
+                // REMOVE Zoom Button Checks
+                // 'zoom-in-button': !!document.getElementById('zoom-in-button'),
+                // 'zoom-out-button': !!document.getElementById('zoom-out-button'),
+                // 'zoom-reset-button': !!document.getElementById('zoom-reset-button')
             };
             
             document.getElementById('debug-output').textContent += '\n\nElement status:\n' + 
@@ -74,5 +72,12 @@
         });
     </script>
     <script src="script.js"></script>
+
+    <!-- Panel Debug dipindahkan ke sini -->
+    <div id="debug-panel" style="display:none; border: 1px solid red; margin-top: 10px; padding: 5px;">
+        <h3>Debugging Information</h3>
+        <pre id="debug-output">Loading debug information...</pre>
+        <button onclick="document.getElementById('debug-panel').style.display='none'">Close</button>
+    </div>
 </body>
 </html>

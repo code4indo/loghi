@@ -81,7 +81,6 @@ h1 {
 #image-container {
     position: relative; /* Needed for absolute positioning of highlights */
     max-width: 100%;
-    overflow: auto; /* Enable scroll if image is large */
 }
 
 #image-container img {
@@ -105,4 +104,21 @@ h1 {
     border: 2px solid red;
     background-color: rgba(255, 0, 0, 0.2);
     pointer-events: none; /* Allow clicks to pass through to image if needed */
+}
+
+/* Style untuk Split.js */
+.gutter {
+    background-color: #eee;
+    background-repeat: no-repeat;
+    background-position: 50%;
+}
+
+.gutter.gutter-horizontal {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+    cursor: col-resize; /* Pastikan kursor diatur di sini */
+}
+
+.split {
+    display: flex;
+    flex-direction: row;
 }
