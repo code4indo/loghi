@@ -20,3 +20,5 @@ Untuk memulai HTR, lakukan langkah-langkah berikut:
     python3 -m http.server
     ```
 6.  Buka browser Anda dan arahkan ke server lokal, lalu pilih folder yang berisi gambar dokumen.
+git reset --hard HEAD
+git clean -fd
