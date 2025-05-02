@@ -6,7 +6,8 @@ Untuk memulai HTR, lakukan langkah-langkah berikut:
 3.  Jalankan perintah berikut:
     *   *Catatan: Pastikan Docker pada Windows sudah berjalan.*
     ```bash
-    ./scripts/inference-pipeline.sh /arsip
+    cd /mnt/c/PERSONAL/SMART-X/TESIS/SourceCode/loghi
+    ./scripts/inference-pipeline.sh arsip
     ```
 4.  Setelah perintah inference dijalankan, akan terbentuk direktori `page` dengan struktur berikut:
     ```

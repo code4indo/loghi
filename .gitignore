@@ -145,6 +145,7 @@ models/
 arsip/
 chat_history/
 vue_interface/
+arsip3/
 
 # Docker related files (if needed, adjust based on actual build outputs)
 # Example: If docker builds create large files outside 'build/'
@@ -158,3 +159,15 @@ vue_interface/
 # Example: Output directories from scripts if not already covered
 # output/
 # results/
+
+
+# Image files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.svg
+*.tiff
+*.tif
+*.webp
