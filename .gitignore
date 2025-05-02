@@ -144,6 +144,7 @@ Thumbs.db
 models/
 arsip/
 chat_history/
+vue_interface/
 
 # Docker related files (if needed, adjust based on actual build outputs)
 # Example: If docker builds create large files outside 'build/'
